@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { ArrowRight, Upload, Camera, X, Zap } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowRight, Upload, Camera, X, Zap, RotateCcw } from 'lucide-react';
 import VisualForm from './VisualForm';
 
 interface ImageAnalysisFlowProps {
@@ -7,7 +7,7 @@ interface ImageAnalysisFlowProps {
 }
 
 type Gender = 'male' | 'female' | null;
-type FlowStep = 'gender-selection' | 'image-capture' | 'analysis-results' | 'form';
+type FlowStep = 'gender-selection' | 'image-capture' | 'analysis-results' | 'form' | 'camera-view';
 
 const maleRecommendations = [
   { name: 'Blazer Azul Marino', color: '#001F3F', category: 'Superior' },
@@ -32,11 +32,31 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
   const [selectedGender, setSelectedGender] = useState<Gender>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const recommendations =
     selectedGender === 'male' ? maleRecommendations : femaleRecommendations;
+
+  // Cleanup camera stream on unmount or step change
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  // Stop camera when leaving camera-view step
+  useEffect(() => {
+    if (currentStep !== 'camera-view' && cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+  }, [currentStep]);
 
   const handleGenderSelection = (gender: Gender) => {
     setSelectedGender(gender);
@@ -58,12 +78,56 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
     fileInputRef.current?.click();
   };
 
-  const handleCameraClick = () => {
-    cameraInputRef.current?.click();
+  const handleOpenCamera = async () => {
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      setCameraStream(stream);
+      setCurrentStep('camera-view');
+      
+      // Set video source after component updates
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 0);
+    } catch (err: any) {
+      setCameraError(
+        err.message === 'Permission denied'
+          ? 'Necesitas permitir acceso a la cámara'
+          : 'No se pudo acceder a la cámara. Intenta con otro navegador o dispositivo.'
+      );
+    }
+  };
+
+  const handleCapture = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0);
+        const imageData = canvasRef.current.toDataURL('image/jpeg', 0.95);
+        setUploadedImage(imageData);
+        
+        // Stop camera stream
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+          setCameraStream(null);
+        }
+        
+        // Start analysis
+        simulateAnalysis();
+      }
+    }
   };
 
   const simulateAnalysis = () => {
     setIsAnalyzing(true);
+    setCurrentStep('image-capture');
     setTimeout(() => {
       setIsAnalyzing(false);
       setCurrentStep('analysis-results');
@@ -85,6 +149,10 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
     setSelectedGender(null);
     setUploadedImage(null);
     setIsAnalyzing(false);
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
   };
 
   // Show form when in form step
@@ -238,21 +306,85 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
                 {/* Camera Option */}
                 <div className="mt-6">
                   <button
-                    onClick={handleCameraClick}
+                    onClick={handleOpenCamera}
                     className="w-full border-2 border-[#7F77DD] text-[#7F77DD] px-6 py-3 rounded-lg hover:bg-[#7F77DD] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 font-medium"
                   >
                     <Camera size={20} />
                     O usa la cámara de tu dispositivo
                   </button>
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={(e) => e.target.files && handleFileUpload(e.target.files[0])}
-                    className="hidden"
-                  />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2A: Camera View */}
+          {currentStep === 'camera-view' && (
+            <div className="fade-in">
+              <div className="text-center mb-8">
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#1A1A2E] mb-4">
+                  Cámara Abierta
+                </h2>
+                <p className="text-lg text-[#6B6B8A]">
+                  Posiciónate frente a la cámara y captura tu foto
+                </p>
+              </div>
+
+              <div className="max-w-2xl mx-auto">
+                {cameraError ? (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-8 text-center mb-6">
+                    <p className="text-red-700 font-semibold mb-4">{cameraError}</p>
+                    <button
+                      onClick={() => setCurrentStep('image-capture')}
+                      className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-all duration-300"
+                    >
+                      Volver
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Video Stream */}
+                    <div className="relative rounded-2xl overflow-hidden shadow-xl mb-6">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-auto bg-black"
+                      />
+                      {/* Overlay guide */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-64 h-80 border-4 border-white rounded-3xl opacity-50" />
+                      </div>
+                    </div>
+
+                    {/* Hidden Canvas for capture */}
+                    <canvas ref={canvasRef} className="hidden" />
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-4">
+                      <button
+                        onClick={handleCapture}
+                        className="flex-1 bg-gradient-to-r from-[#7F77DD] to-[#378ADD] text-white px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 font-bold text-lg"
+                      >
+                        <Camera size={24} />
+                        Capturar Foto
+                      </button>
+                      <button
+                        onClick={() => setCurrentStep('image-capture')}
+                        className="flex-1 border-2 border-[#7F77DD] text-[#7F77DD] px-8 py-4 rounded-lg hover:bg-[#7F77DD] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 font-semibold"
+                      >
+                        <X size={20} />
+                        Cancelar
+                      </button>
+                    </div>
+
+                    {/* Tips */}
+                    <div className="bg-blue-50 rounded-xl p-4 mt-6 border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        💡 <span className="font-semibold">Consejo:</span> Asegúrate de que el rostro esté completamente visible y bien iluminado
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
