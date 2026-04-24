@@ -27,6 +27,42 @@ const femaleRecommendations = [
   { name: 'Accesorios Dorados', color: '#FFD700', category: 'Accesorio' },
 ];
 
+// Color to descriptive name mapping
+const colorNameMap: { [key: string]: string } = {
+  '#001F3F': 'Azul Marino',
+  '#50C878': 'Verde Esmeralda',
+  '#2F4F4F': 'Gris Carbón',
+  '#4B0082': 'Morado Oscuro',
+  '#1C1C1C': 'Negro',
+  '#FFD700': 'Dorado',
+  '#00008B': 'Azul Profundo',
+  '#6A0572': 'Morado',
+};
+
+// Function to generate Mercado Libre search URL
+const generateMercadoLibreUrl = (product: string, color: string): string => {
+  const colorName = colorNameMap[color] || color;
+  const searchQuery = `${product} ${colorName}`.replace(/\s+/g, '-');
+  return `https://listado.mercadolibre.com.ar/${searchQuery}`;
+};
+
+// Product mapping for purchase section
+const getShoppingProducts = (gender: Gender) => {
+  if (gender === 'male') {
+    return [
+      { name: 'Chaqueta', colorIndex: 0, icon: '🧥' },
+      { name: 'Polera', colorIndex: 1, icon: '👕' },
+      { name: 'Pantalón', colorIndex: 2, icon: '👖' },
+    ];
+  } else {
+    return [
+      { name: 'Chaqueta', colorIndex: 0, icon: '🧥' },
+      { name: 'Polera', colorIndex: 1, icon: '👚' },
+      { name: 'Pantalón', colorIndex: 2, icon: '👖' },
+    ];
+  }
+};
+
 export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
   const [currentStep, setCurrentStep] = useState<FlowStep>('gender-selection');
   const [selectedGender, setSelectedGender] = useState<Gender>(null);
@@ -104,13 +140,18 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
   };
 
   const handleCapture = () => {
-    if (videoRef.current && canvasRef.current) {
+    if (videoRef.current && canvasRef.current && videoRef.current.readyState === videoRef.current.HAVE_FUTURE_DATA) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
-        canvasRef.current.width = videoRef.current.videoWidth;
-        canvasRef.current.height = videoRef.current.videoHeight;
-        context.drawImage(videoRef.current, 0, 0);
-        const imageData = canvasRef.current.toDataURL('image/jpeg', 0.95);
+        const video = videoRef.current;
+        canvasRef.current.width = video.videoWidth;
+        canvasRef.current.height = video.videoHeight;
+        
+        // Draw the video frame to canvas
+        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        
+        // Convert to image
+        const imageData = canvasRef.current.toDataURL('image/jpeg', 0.9);
         setUploadedImage(imageData);
         
         // Stop camera stream
@@ -122,6 +163,8 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
         // Start analysis
         simulateAnalysis();
       }
+    } else {
+      alert('La cámara aún no está lista. Intenta de nuevo.');
     }
   };
 
@@ -346,8 +389,9 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
                     <div className="relative rounded-2xl overflow-hidden shadow-xl mb-6">
                       <video
                         ref={videoRef}
-                        autoPlay
-                        playsInline
+                        autoPlay={true}
+                        playsInline={true}
+                        muted={true}
                         className="w-full h-auto bg-black"
                       />
                       {/* Overlay guide */}
@@ -518,6 +562,48 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
                       </button>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Shopping Section - Mercado Libre */}
+              <div className="mb-12">
+                <h3 className="text-2xl font-bold text-[#1A1A2E] mb-6 text-center">
+                  🛍️ Compra Ahora en Mercado Libre
+                </h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {getShoppingProducts(selectedGender).map((product, idx) => {
+                    const color = recommendations[idx]?.color || '#000000';
+                    const colorName = colorNameMap[color] || color;
+                    const mlUrl = generateMercadoLibreUrl(product.name, color);
+                    
+                    return (
+                      <a
+                        key={idx}
+                        href={mlUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group bg-gradient-to-br from-white to-[#F5F4FB] rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-[#FFB800]"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="text-4xl">{product.icon}</div>
+                          <div
+                            className="h-12 w-12 rounded-lg shadow-sm"
+                            style={{ backgroundColor: color }}
+                          ></div>
+                        </div>
+                        <h4 className="text-lg font-bold text-[#1A1A2E] mb-2">
+                          {product.name} {colorName}
+                        </h4>
+                        <p className="text-sm text-[#6B6B8A] mb-4">
+                          Encuentra las mejores opciones en Mercado Libre
+                        </p>
+                        <div className="flex items-center gap-2 text-[#FFB800] font-semibold group-hover:gap-3 transition-all">
+                          <span>Ver en Mercado Libre</span>
+                          <ArrowRight size={18} />
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
 
