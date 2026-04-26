@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
 import ImageAnalysisStart from '../components/ImageAnalysisStart';
+import ImageAnalysisFlow from '../components/ImageAnalysisFlow';
 import VisualForm from '../components/VisualForm';
 import UserProfile from '../components/UserProfile';
 import InstallationGuide from '../components/InstallationGuide';
@@ -16,7 +17,7 @@ interface HomePageProps {
   onProductoClick?: () => void;
 }
 
-type AnalysisStep = 'hero' | 'start' | 'form' | 'profile' | 'installation';
+type AnalysisStep = 'hero' | 'start' | 'image-analysis' | 'form' | 'profile' | 'installation';
 
 export default function HomePage({ onProductoClick }: HomePageProps) {
   const navigate = useNavigate();
@@ -73,25 +74,20 @@ export default function HomePage({ onProductoClick }: HomePageProps) {
   };
 
   const handlePhotoPath = () => {
-    console.log('Photo path clicked');
-    // Por ahora, simular análisis con datos
-    const mockCharacteristics = {
-      hairColor: 'Castaño oscuro',
-      hairTexture: 'Ondulado',
-      hairLength: 'Largo',
-      eyeColor: 'Marrón claro',
-      skinTone: 'Medio',
-      skinUndertone: 'Cálido',
-      lipColor: '#c78855',
-      eyebrowColor: '#6b4423',
-      faceShape: 'Ovalado',
-      noseType: 'Recta',
-      additionalTraits: ['Pecas'],
-      gender: 'Mujer'
-    };
-    setUserCharacteristics(mockCharacteristics);
-    localStorage.setItem('userCharacteristics', JSON.stringify(mockCharacteristics));
+    console.log('Photo path clicked - opening image analysis flow');
+    setAnalysisStep('image-analysis');
+  };
+
+  const handleImageAnalysisComplete = (characteristics: any) => {
+    console.log('Image analysis complete:', characteristics);
+    setUserCharacteristics(characteristics);
+    localStorage.setItem('userCharacteristics', JSON.stringify(characteristics));
     setAnalysisStep('profile');
+  };
+
+  const handleImageAnalysisClose = () => {
+    console.log('Image analysis closed');
+    setAnalysisStep('start');
   };
 
   const handleFormPath = () => {
@@ -149,6 +145,20 @@ export default function HomePage({ onProductoClick }: HomePageProps) {
         {navbarWithNavigation}
         <main className="pt-16">
           <ImageAnalysisStart onPhotoPath={handlePhotoPath} onFormPath={handleFormPath} />
+        </main>
+      </>
+    );
+  }
+
+  if (analysisStep === 'image-analysis') {
+    return (
+      <>
+        {navbarWithNavigation}
+        <main className="pt-16">
+          <ImageAnalysisFlow 
+            onComplete={handleImageAnalysisComplete}
+            onClose={handleImageAnalysisClose} 
+          />
         </main>
       </>
     );

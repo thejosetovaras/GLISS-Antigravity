@@ -4,6 +4,7 @@ import VisualForm from './VisualForm';
 
 interface ImageAnalysisFlowProps {
   onClose?: () => void;
+  onComplete?: (characteristics: any) => void;
 }
 
 type Gender = 'male' | 'female' | null;
@@ -63,7 +64,7 @@ const getShoppingProducts = (gender: Gender) => {
   }
 };
 
-export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
+export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysisFlowProps) {
   const [currentStep, setCurrentStep] = useState<FlowStep>('gender-selection');
   const [selectedGender, setSelectedGender] = useState<Gender>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -195,6 +196,25 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       setCameraStream(null);
+    }
+  };
+
+  const handleSaveResults = () => {
+    // Create characteristics object from analysis
+    const characteristics = {
+      gender: selectedGender === 'male' ? 'Hombre' : 'Mujer',
+      colorimetryType: selectedGender === 'male' ? 'Invierno Cálido' : 'Invierno Cálido',
+      recommendedColors: recommendations.slice(0, 3).map(r => r.color),
+      recommendations: recommendations,
+      uploadedImage: uploadedImage,
+    };
+    
+    // Call the onComplete callback if provided
+    if (onComplete) {
+      onComplete(characteristics);
+    } else {
+      // Otherwise just reset
+      handleReset();
     }
   };
 
@@ -631,10 +651,10 @@ export default function ImageAnalysisFlow({ onClose }: ImageAnalysisFlowProps) {
                 </button>
                 {onClose && (
                   <button
-                    onClick={onClose}
+                    onClick={handleSaveResults}
                     className="bg-gradient-to-r from-[#7F77DD] to-[#378ADD] text-white px-8 py-3 rounded-full hover:shadow-lg transition-all duration-300 font-medium"
                   >
-                    Cerrar
+                    Ver Recomendaciones
                   </button>
                 )}
               </div>
