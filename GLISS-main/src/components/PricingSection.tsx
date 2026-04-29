@@ -132,7 +132,7 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
                         ? 'text-white'
                         : plan.luxury
                         ? 'text-white'
-                        : 'text-white'
+                        : 'text-[#1A1A2E]'
                     }`}
                   >
                     {plan.price}
@@ -144,7 +144,7 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
                       ? 'text-white/80'
                       : plan.luxury
                       ? 'text-white/80'
-                      : 'text-white/80'
+                      : 'text-[#6B6B8A]'
                   }`}>
                     {plan.subtitle}
                   </p>
