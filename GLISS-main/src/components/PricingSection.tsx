@@ -10,58 +10,66 @@ interface PricingSectionProps {
 export default function PricingSection({ onSubscribe, onFreeStart }: PricingSectionProps) {
   const plans = [
     {
-      name: 'Acceso gratis',
-      price: 'Siempre',
-      tagline: 'Comienza tu viaje de imagen',
+      name: 'Premium',
+      price: '$149.990',
+      subtitle: 'CLP / mes + IVA',
+      badge: '3% comisión por venta recomendada por GLISS',
+      tagline: 'Suscripción mensual + 3% de comisión solo cuando tu tienda vende. Si GLISS no genera ventas, no pagas comisión.',
       features: [
-        '1 análisis de imagen completo',
-        'Paleta de colores personalizada',
-        'Descubrimiento de tu temporada',
-        'Visualización de tu perfil',
-        'Sin tarjeta de crédito requerida',
+        '30 artículos en el pool de recomendación',
+        'Analizador de colorimetría en tu tienda',
+        'Widget one-click sin programación',
+        'Conector automático de catálogo',
+        'Dashboard básico de métricas',
+        'Soporte por email',
       ],
       highlighted: false,
-      cta: 'Comenzar ahora',
-      url: '#',
-      isPremium: false,
-    },
-    {
-      name: 'Premium',
-      price: '$149.9',
-      priceFreq: '/mes',
-      tagline: 'Para quienes son serios con su estilo',
-      badge: 'Más popular',
-      features: [
-        '50 análisis de imagen completos',
-        'Historial completo de todos tus perfiles',
-        'Descargar paletas en alta definición',
-        'Compartir perfil en redes sociales',
-        '+1500 productos recomendados',
-        'Actualizaciones de recomendaciones mensuales',
-      ],
-      highlighted: true,
-      cta: 'Suscribirse ahora',
+      cta: 'Solicitar demo',
       url: '#',
       isPremium: true,
     },
     {
-      name: 'Luxury',
-      price: '$1090',
-      priceFreq: '/mes',
-      tagline: 'Asesoramiento completo que no tiene límites',
+      name: 'Growth',
+      price: '$399.990',
+      subtitle: 'CLP / mes + IVA',
+      badge: 'Más popular',
+      badge2: '3% comisión por venta recomendada por GLISS',
+      tagline: 'Suscripción mensual + 3% de comisión solo cuando tu tienda vende. Si GLISS no genera ventas, no pagas comisión.',
       features: [
-        'Análisis de imagen ilimitados',
-        'Historial completo de todos tus perfiles',
-        'Descargar paletas en alta definición',
-        'Compartir perfil en redes sociales',
-        '+1500 productos recomendados',
-        'Actualizaciones de recomendaciones mensuales',
-        'Soporte prioritario 24/7',
-        'Consultas personalizadas con estilistas',
+        '200 artículos en el pool de recomendación',
+        'Analizador de colorimetría en tu tienda',
+        'Widget one-click sin programación',
+        'Conector automático de catálogo',
+        'Dashboard avanzado + exportación',
+        'Segmentación de inventario por paleta',
+        'Campañas dirigidas por colorimetría',
+        'Soporte prioritario',
+      ],
+      highlighted: true,
+      cta: 'Solicitar demo',
+      url: '#',
+      isPremium: true,
+    },
+    {
+      name: 'Scale',
+      price: '$1.099.000',
+      subtitle: 'CLP / mes + IVA',
+      badge: '3% comisión por venta recomendada por GLISS',
+      tagline: 'Suscripción mensual + 3% de comisión solo cuando tu tienda vende. Si GLISS no genera ventas, no pagas comisión.',
+      features: [
+        'Artículos ilimitados en el pool de recomendación',
+        'Analizador de colorimetría en tu tienda',
+        'Widget one-click sin programación',
+        'Conector automático de catálogo',
+        'Dashboard avanzado + exportación',
+        'Segmentación de inventario por paleta',
+        'Campañas dirigidas por colorimetría',
+        'Soporte prioritario + onboarding dedicado',
+        'API access para integraciones personalizadas',
       ],
       highlighted: false,
       luxury: true,
-      cta: 'Suscribirse ahora',
+      cta: 'Solicitar demo',
       url: '#',
       isPremium: true,
     },
@@ -72,13 +80,14 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16 fade-in">
           <p className="text-sm font-medium text-[#7F77DD] uppercase tracking-wide mb-3">
-            Precios
+            Planes
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A2E] mb-4">
-            Acceso a tu análisis de imagen
+            Planes GLISS
           </h2>
-          <p className="text-lg text-[#6B6B8A] max-w-2xl mx-auto">
-            Comienza gratis. Amplía cuando necesites más.
+          <p className="text-lg text-[#6B6B8A] max-w-3xl mx-auto">
+            Suscripción mensual + 3% de comisión solo cuando tu tienda vende.<br />
+            Si GLISS no genera ventas, no pagas comisión.
           </p>
         </div>
 
@@ -96,61 +105,50 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
             >
               {plan.badge && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-[#378ADD] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                  <span className="bg-white text-[#7F77DD] text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
                     {plan.badge}
+                  </span>
+                </div>
+              )}
+              
+              {plan.badge2 && (
+                <div className="bg-white rounded-lg p-3 mb-4 text-center">
+                  <span className="text-xs font-semibold text-[#7F77DD]">
+                    {plan.badge2}
                   </span>
                 </div>
               )}
 
               <div className="mb-6">
-                <h3
-                  className={`text-2xl font-bold mb-1 ${
-                    plan.highlighted
-                      ? 'text-white'
-                      : plan.luxury
-                      ? 'text-white'
-                      : 'text-[#1A1A2E]'
-                  }`}
-                >
-                  {plan.name}
-                </h3>
-                <div className="flex items-baseline gap-1 mb-2">
+                <p className={`text-xs uppercase tracking-wider font-semibold mb-2 ${
+                  plan.highlighted ? 'text-blue-200' : plan.luxury ? 'text-amber-300' : 'text-[#7F77DD]'
+                }`}>
+                  {plan.name === 'Premium' ? 'PREMIUM' : plan.name === 'Growth' ? 'GROWTH' : 'SCALE'}
+                </p>
+                <div className="flex items-baseline gap-2 mb-2">
                   <span
-                    className={`text-3xl font-bold ${
+                    className={`text-4xl font-bold ${
                       plan.highlighted
                         ? 'text-white'
                         : plan.luxury
-                        ? 'text-amber-400'
-                        : 'text-[#7F77DD]'
+                        ? 'text-white'
+                        : 'text-white'
                     }`}
                   >
                     {plan.price}
                   </span>
-                  {plan.priceFreq && (
-                    <span
-                      className={`${
-                        plan.highlighted
-                          ? 'text-white/90'
-                          : plan.luxury
-                          ? 'text-white/90'
-                          : 'text-[#6B6B8A]'
-                      }`}
-                    >
-                      {plan.priceFreq}
-                    </span>
-                  )}
                 </div>
-                <p
-                  className={`text-sm ${
+                {plan.subtitle && (
+                  <p className={`text-xs mb-3 ${
                     plan.highlighted
-                      ? 'text-white/90'
+                      ? 'text-white/80'
                       : plan.luxury
-                      ? 'text-white/90'
-                      : 'text-[#6B6B8A]'
-                  }`}
-                >
-                  {plan.tagline}
-                </p>
+                      ? 'text-white/80'
+                      : 'text-white/80'
+                  }`}>
+                    {plan.subtitle}
+                  </p>
+                )}
               </div>
 
               <ul className="space-y-4 mb-8">
