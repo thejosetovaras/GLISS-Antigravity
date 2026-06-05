@@ -24,6 +24,7 @@ export default function HomePage({ onProductoClick }: HomePageProps) {
   const [analysisStep, setAnalysisStep] = useState<AnalysisStep>('hero');
   const [userCharacteristics, setUserCharacteristics] = useState<any>(null);
   const [selectedPlan, setSelectedPlan] = useState<string>('');
+  const [initialImage, setInitialImage] = useState<string | null>(null);
 
   // Cargar datos guardados al montar
   useEffect(() => {
@@ -73,8 +74,13 @@ export default function HomePage({ onProductoClick }: HomePageProps) {
     navigate('/nosotros');
   };
 
-  const handlePhotoPath = () => {
+  const handlePhotoPath = (image?: string) => {
     console.log('Photo path clicked - opening image analysis flow');
+    if (image) {
+      setInitialImage(image);
+    } else {
+      setInitialImage(null);
+    }
     setAnalysisStep('image-analysis');
   };
 
@@ -128,6 +134,7 @@ export default function HomePage({ onProductoClick }: HomePageProps) {
     setAnalysisStep('hero');
     setUserCharacteristics(null);
     localStorage.removeItem('userCharacteristics');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Navbar con navegación mejorada
@@ -156,6 +163,7 @@ export default function HomePage({ onProductoClick }: HomePageProps) {
         {navbarWithNavigation}
         <main className="pt-16">
           <ImageAnalysisFlow 
+            initialImage={initialImage}
             onComplete={handleImageAnalysisComplete}
             onClose={handleImageAnalysisClose} 
           />

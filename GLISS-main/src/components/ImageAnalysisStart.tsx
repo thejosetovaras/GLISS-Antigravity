@@ -1,13 +1,30 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Camera, Upload, ArrowRight } from 'lucide-react';
 
 interface ImageAnalysisStartProps {
-  onPhotoPath: () => void;
+  onPhotoPath: (image?: string) => void;
   onFormPath: () => void;
 }
 
 export default function ImageAnalysisStart({ onPhotoPath, onFormPath }: ImageAnalysisStartProps) {
   const [hoveredOption, setHoveredOption] = useState<'photo' | 'form' | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onPhotoPath(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <section className="min-h-screen pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#EEEDF9] via-[#F5F4FB] to-white">
@@ -29,7 +46,6 @@ export default function ImageAnalysisStart({ onPhotoPath, onFormPath }: ImageAna
           <div
             onMouseEnter={() => setHoveredOption('photo')}
             onMouseLeave={() => setHoveredOption(null)}
-            onClick={onPhotoPath}
             className={`group relative bg-white rounded-2xl p-8 lg:p-10 cursor-pointer transition-all duration-300 ${
               hoveredOption === 'photo'
                 ? 'transform -translate-y-2 shadow-2xl ring-2 ring-[#7F77DD]'
@@ -72,13 +88,23 @@ export default function ImageAnalysisStart({ onPhotoPath, onFormPath }: ImageAna
             {/* Action Buttons */}
             <div className="space-y-3">
               <button 
-                onClick={onPhotoPath}
+                onClick={handleUploadClick}
                 className="w-full bg-gradient-to-r from-[#7F77DD] to-[#378ADD] text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 font-medium">
                 <Upload size={20} />
                 Subir foto
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
               <button 
-                onClick={onPhotoPath}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPhotoPath('camera');
+                }}
                 className="w-full border-2 border-[#7F77DD] text-[#7F77DD] px-6 py-3 rounded-lg hover:bg-[#7F77DD] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 font-medium">
                 <Camera size={20} />
                 Usar cámara

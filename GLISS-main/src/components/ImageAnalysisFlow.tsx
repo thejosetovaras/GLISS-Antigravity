@@ -3,6 +3,7 @@ import { ArrowRight, Upload, Camera, X, Zap, RotateCcw } from 'lucide-react';
 import VisualForm from './VisualForm';
 
 interface ImageAnalysisFlowProps {
+  initialImage?: string | null;
   onClose?: () => void;
   onComplete?: (characteristics: any) => void;
 }
@@ -10,22 +11,29 @@ interface ImageAnalysisFlowProps {
 type Gender = 'male' | 'female' | null;
 type FlowStep = 'gender-selection' | 'image-capture' | 'analysis-results' | 'form' | 'camera-view';
 
+const colorimetryProfiles = [
+  { season: 'Primavera', description: 'Tu paleta ideal incluye tonos pasteles, cálidos y luminosos como melocotón, verde menta y azules claros.', colors: ['#FFDAB9', '#98FF98', '#ADD8E6', '#FFB6C1', '#F0E68C', '#E6E6FA'], metal: 'Dorado', metalColor: '#FFD700' },
+  { season: 'Verano', description: 'Tu paleta ideal incluye tonos empolvados y frescos como azul cielo, rosa pastel y lavanda.', colors: ['#87CEEB', '#FFB6C1', '#E6E6FA', '#D8BFD8', '#B0E0E6', '#F5FFFA'], metal: 'Plateado', metalColor: '#C0C0C0' },
+  { season: 'Otoño', description: 'Tu paleta ideal incluye colores cálidos y tierra como mostaza, oliva y terracota.', colors: ['#FFDB58', '#808000', '#E2725B', '#DAA520', '#CD853F', '#D2B48C'], metal: 'Dorado', metalColor: '#FFD700' },
+  { season: 'Invierno', description: 'Tu paleta ideal incluye colores intensos, oscuros y contrastantes como negro, rojo vino y azul noche.', colors: ['#000000', '#722F37', '#191970', '#8B0000', '#4B0082', '#000080'], metal: 'Plateado', metalColor: '#C0C0C0' }
+];
+
 const maleRecommendations = [
-  { name: 'Blazer Azul Marino', color: '#001F3F', category: 'Superior' },
-  { name: 'Camiseta Verde Esmeralda', color: '#50C878', category: 'Superior' },
-  { name: 'Pantalón Gris Carbón', color: '#2F4F4F', category: 'Inferior' },
-  { name: 'Suéter Morado Oscuro', color: '#4B0082', category: 'Superior' },
-  { name: 'Chaqueta Cuero Negro', color: '#1C1C1C', category: 'Abrigo' },
-  { name: 'Corbata Azul Profundo', color: '#00008B', category: 'Accesorio' },
+  { name: 'Blazer', category: 'Superior' },
+  { name: 'Camiseta', category: 'Superior' },
+  { name: 'Pantalón', category: 'Inferior' },
+  { name: 'Suéter', category: 'Superior' },
+  { name: 'Chaqueta', category: 'Abrigo' },
+  { name: 'Accesorio', category: 'Accesorio' },
 ];
 
 const femaleRecommendations = [
-  { name: 'Vestido Azul Marino', color: '#001F3F', category: 'Vestido' },
-  { name: 'Blusa Verde Esmeralda', color: '#50C878', category: 'Superior' },
-  { name: 'Falda Gris Charcoal', color: '#2F4F4F', category: 'Inferior' },
-  { name: 'Blusa Morada', color: '#6A0572', category: 'Superior' },
-  { name: 'Chaqueta Elegante Negra', color: '#1C1C1C', category: 'Abrigo' },
-  { name: 'Accesorios Dorados', color: '#FFD700', category: 'Accesorio' },
+  { name: 'Vestido', category: 'Vestido' },
+  { name: 'Blusa', category: 'Superior' },
+  { name: 'Falda', category: 'Inferior' },
+  { name: 'Blusa', category: 'Superior' },
+  { name: 'Chaqueta', category: 'Abrigo' },
+  { name: 'Accesorio', category: 'Accesorio' },
 ];
 
 // Color to descriptive name mapping
@@ -40,11 +48,11 @@ const colorNameMap: { [key: string]: string } = {
   '#6A0572': 'Morado',
 };
 
-// Function to generate Mercado Libre search URL
-const generateMercadoLibreUrl = (product: string, color: string): string => {
+// Function to generate search URL
+const generateTiendaUrl = (product: string, color: string): string => {
   const colorName = colorNameMap[color] || color;
   const searchQuery = `${product} ${colorName}`.replace(/\s+/g, '-');
-  return `https://listado.mercadolibre.com.ar/${searchQuery}`;
+  return `#search-${searchQuery}`;
 };
 
 // Product mapping for purchase section
@@ -64,19 +72,48 @@ const getShoppingProducts = (gender: Gender) => {
   }
 };
 
-export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysisFlowProps) {
-  const [currentStep, setCurrentStep] = useState<FlowStep>('gender-selection');
-  const [selectedGender, setSelectedGender] = useState<Gender>(null);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+export default function ImageAnalysisFlow({ initialImage, onClose, onComplete }: ImageAnalysisFlowProps) {
+  const [currentStep, setCurrentStep] = useState<FlowStep>(
+    initialImage === 'camera' ? 'camera-view' : initialImage ? 'image-capture' : 'gender-selection'
+  );
+  const [selectedGender, setSelectedGender] = useState<Gender>(initialImage ? 'female' : null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(
+    initialImage === 'camera' ? null : initialImage || null
+  );
+  const [isAnalyzing, setIsAnalyzing] = useState(
+    initialImage && initialImage !== 'camera' ? true : false
+  );
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const recommendations =
+  const baseRecommendations =
     selectedGender === 'male' ? maleRecommendations : femaleRecommendations;
+  
+  const recommendations = baseRecommendations.map((rec, i) => ({
+    ...rec,
+    color: userProfile ? userProfile.colors[i % userProfile.colors.length] : '#000000'
+  }));
+
+  useEffect(() => {
+    if (initialImage === 'camera') {
+      handleOpenCamera();
+    } else if (initialImage) {
+      simulateAnalysis();
+    }
+  }, [initialImage]);
+
+  // Asegurar que los elementos con fade-in se vuelvan visibles
+  useEffect(() => {
+    const fadeElements = document.querySelectorAll('.fade-in, .fade-in-delay');
+    // Pequeño timeout para asegurar que el DOM se haya actualizado
+    setTimeout(() => {
+      fadeElements.forEach((el) => el.classList.add('visible'));
+    }, 50);
+  }, [currentStep]);
 
   // Cleanup camera stream on unmount or step change
   useEffect(() => {
@@ -172,6 +209,11 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
   const simulateAnalysis = () => {
     setIsAnalyzing(true);
     setCurrentStep('image-capture');
+    
+    // Asignar un perfil de colorimetría al azar
+    const randomProfile = colorimetryProfiles[Math.floor(Math.random() * colorimetryProfiles.length)];
+    setUserProfile(randomProfile);
+
     setTimeout(() => {
       setIsAnalyzing(false);
       setCurrentStep('analysis-results');
@@ -200,20 +242,17 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
   };
 
   const handleSaveResults = () => {
-    // Create characteristics object from analysis
     const characteristics = {
       gender: selectedGender === 'male' ? 'Hombre' : 'Mujer',
-      colorimetryType: selectedGender === 'male' ? 'Invierno Cálido' : 'Invierno Cálido',
-      recommendedColors: recommendations.slice(0, 3).map(r => r.color),
+      colorimetryType: userProfile?.season || 'Invierno Cálido',
+      recommendedColors: userProfile?.colors.slice(0, 3) || ['#000000'],
       recommendations: recommendations,
       uploadedImage: uploadedImage,
     };
     
-    // Call the onComplete callback if provided
     if (onComplete) {
       onComplete(characteristics);
     } else {
-      // Otherwise just reset
       handleReset();
     }
   };
@@ -458,7 +497,7 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
             <div className="fade-in text-center">
               <div className="mb-16">
                 <h2 className="text-3xl sm:text-4xl font-bold text-[#1A1A2E] mb-4">
-                  Analizando tu foto...
+                  Estamos analizando tus colores con GLISS
                 </h2>
                 <p className="text-lg text-[#6B6B8A]">
                   Nuestro sistema está procesando tu imagen
@@ -526,10 +565,13 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
               {/* Seasonality Result */}
               <div className="bg-gradient-to-r from-[#7F77DD] to-[#378ADD] text-white rounded-2xl p-12 mb-12 text-center shadow-xl">
                 <p className="text-sm opacity-90 mb-2">Tu análisis de colorimetría</p>
-                <h2 className="text-4xl sm:text-5xl font-bold mb-4">Invierno Cálido</h2>
-                <p className="text-white/90 text-lg">
-                  Tu paleta ideal incluye azules profundos, verdes esmeralda, morados ricos y tonos cálidos con contraste
+                <h2 className="text-4xl sm:text-5xl font-bold mb-4">{userProfile?.season}</h2>
+                <p className="text-white/90 text-lg mb-4">
+                  {userProfile?.description}
                 </p>
+                <div className="inline-block bg-white/20 px-6 py-2 rounded-full backdrop-blur-sm border border-white/30 font-medium">
+                  Metales sugeridos: <span style={{ color: userProfile?.metalColor }} className="font-bold drop-shadow-md">{userProfile?.metal}</span>
+                </div>
               </div>
 
               {/* Color Palette */}
@@ -538,14 +580,14 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
                   Tu Paleta de Colores
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                  {['#001F3F', '#50C878', '#4B0082', '#00008B', '#2F4F4F', '#FFD700'].map(
-                    (color, idx) => (
+                  {(userProfile?.colors || []).map(
+                    (color: string, idx: number) => (
                       <div key={idx} className="flex flex-col items-center">
                         <div
-                          className="h-20 w-full rounded-lg shadow-md mb-2 hover:shadow-lg transition-shadow"
+                          className="h-20 w-full rounded-lg shadow-md mb-2 hover:shadow-lg transition-shadow border border-gray-100"
                           style={{ backgroundColor: color }}
                         ></div>
-                        <span className="text-xs text-[#6B6B8A] text-center">{color}</span>
+                        <span className="text-xs text-[#6B6B8A] text-center font-mono">{color}</span>
                       </div>
                     )
                   )}
@@ -585,16 +627,16 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
                 </div>
               </div>
 
-              {/* Shopping Section - Mercado Libre */}
+              {/* Shopping Section - Tienda */}
               <div className="mb-12">
                 <h3 className="text-2xl font-bold text-[#1A1A2E] mb-6 text-center">
-                  🛍️ Compra Ahora en Mercado Libre
+                  🛍️ Compra Ahora en Nombre de tu tienda
                 </h3>
                 <div className="grid md:grid-cols-3 gap-6">
                   {getShoppingProducts(selectedGender).map((product, idx) => {
                     const color = recommendations[idx]?.color || '#000000';
                     const colorName = colorNameMap[color] || color;
-                    const mlUrl = generateMercadoLibreUrl(product.name, color);
+                    const mlUrl = generateTiendaUrl(product.name, color);
                     
                     return (
                       <a
@@ -615,10 +657,10 @@ export default function ImageAnalysisFlow({ onClose, onComplete }: ImageAnalysis
                           {product.name} {colorName}
                         </h4>
                         <p className="text-sm text-[#6B6B8A] mb-4">
-                          Encuentra las mejores opciones en Mercado Libre
+                          Encuentra las mejores opciones en Nombre de tu tienda
                         </p>
                         <div className="flex items-center gap-2 text-[#FFB800] font-semibold group-hover:gap-3 transition-all">
-                          <span>Ver en Mercado Libre</span>
+                          <span>Ver en Nombre de tu tienda</span>
                           <ArrowRight size={18} />
                         </div>
                       </a>

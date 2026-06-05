@@ -48,26 +48,48 @@ export default function Navbar({ onProductoClick, onHomeClick }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link 
-              to="/" 
-              onClick={onHomeClick}
-              className="text-2xl font-bold bg-gradient-to-r from-[#7F77DD] to-[#378ADD] bg-clip-text text-transparent"
-            >
-              GLISS
-            </Link>
+            {onHomeClick ? (
+              <button 
+                onClick={(e) => {
+                  onHomeClick();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-2xl font-bold bg-gradient-to-r from-[#7F77DD] to-[#378ADD] bg-clip-text text-transparent"
+              >
+                GLISS
+              </button>
+            ) : (
+              <Link 
+                to="/" 
+                className="text-2xl font-bold bg-gradient-to-r from-[#7F77DD] to-[#378ADD] bg-clip-text text-transparent"
+              >
+                GLISS
+              </Link>
+            )}
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <div key={link.label}>
                 {link.type === 'page' ? (
-                  <Link
-                    to={link.to!}
-                    onClick={link.label === 'Inicio' ? onHomeClick : undefined}
-                    className="text-[#6B6B8A] hover:text-[#7F77DD] transition-colors duration-150"
-                  >
-                    {link.label}
-                  </Link>
+                  link.label === 'Inicio' && onHomeClick ? (
+                    <button
+                      onClick={(e) => {
+                        onHomeClick();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="text-[#6B6B8A] hover:text-[#7F77DD] transition-colors duration-150"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      to={link.to!}
+                      className="text-[#6B6B8A] hover:text-[#7F77DD] transition-colors duration-150"
+                    >
+                      {link.label}
+                    </Link>
+                  )
                 ) : link.type === 'modal' ? (
                   <button
                     onClick={onProductoClick}
@@ -115,18 +137,26 @@ export default function Navbar({ onProductoClick, onHomeClick }: NavbarProps) {
             {navLinks.map((link) => (
               <div key={link.label}>
                 {link.type === 'page' ? (
-                  <Link
-                    to={link.to!}
-                    className="block text-[#6B6B8A] hover:text-[#7F77DD] transition-colors py-2"
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      if (link.label === 'Inicio' && onHomeClick) {
+                  link.label === 'Inicio' && onHomeClick ? (
+                    <button
+                      className="block w-full text-left text-[#6B6B8A] hover:text-[#7F77DD] transition-colors py-2"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
                         onHomeClick();
-                      }
-                    }}
-                  >
-                    {link.label}
-                  </Link>
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      to={link.to!}
+                      className="block text-[#6B6B8A] hover:text-[#7F77DD] transition-colors py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  )
                 ) : link.type === 'modal' ? (
                   <button
                     onClick={() => {

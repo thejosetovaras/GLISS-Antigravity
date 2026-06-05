@@ -47,6 +47,7 @@ export default function VisualForm({ onComplete, onBack }: VisualFormProps) {
     { name: 'Castaño Claro', color: '#704214' },
     { name: 'Rubio Oscuro', color: '#8B7355' },
     { name: 'Rubio Claro', color: '#D4AF37' },
+    { name: 'Rubio Intenso', color: '#F3C623' },
     { name: 'Pelirrojo', color: '#C04000' },
     { name: 'Gris', color: '#A9A9A9' },
     { name: 'Blanco', color: '#F5F5F5' },

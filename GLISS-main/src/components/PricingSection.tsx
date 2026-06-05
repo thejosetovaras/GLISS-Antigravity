@@ -13,7 +13,6 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
       name: 'Premium',
       price: '$149.990',
       subtitle: 'CLP / mes + IVA',
-      badge: '3% comisión por venta recomendada por GLISS',
       tagline: 'Suscripción mensual + 3% de comisión solo cuando tu tienda vende. Si GLISS no genera ventas, no pagas comisión.',
       features: [
         '30 artículos en el pool de recomendación',
@@ -33,7 +32,6 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
       price: '$399.990',
       subtitle: 'CLP / mes + IVA',
       badge: 'Más popular',
-      badge2: '3% comisión por venta recomendada por GLISS',
       tagline: 'Suscripción mensual + 3% de comisión solo cuando tu tienda vende. Si GLISS no genera ventas, no pagas comisión.',
       features: [
         '200 artículos en el pool de recomendación',
@@ -54,7 +52,6 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
       name: 'Scale',
       price: '$1.099.000',
       subtitle: 'CLP / mes + IVA',
-      badge: '3% comisión por venta recomendada por GLISS',
       tagline: 'Suscripción mensual + 3% de comisión solo cuando tu tienda vende. Si GLISS no genera ventas, no pagas comisión.',
       features: [
         'Artículos ilimitados en el pool de recomendación',
@@ -104,20 +101,22 @@ export default function PricingSection({ onSubscribe, onFreeStart }: PricingSect
               }`}
             >
               {plan.badge && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-white text-[#7F77DD] text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-max">
+                  <span className="bg-white text-[#7F77DD] text-xs font-semibold px-4 py-1.5 rounded-full shadow-md whitespace-nowrap">
                     {plan.badge}
                   </span>
                 </div>
               )}
               
-              {plan.badge2 && (
-                <div className="bg-white rounded-lg p-3 mb-4 text-center">
-                  <span className="text-xs font-semibold text-[#7F77DD]">
-                    {plan.badge2}
-                  </span>
-                </div>
-              )}
+              <div className={`rounded-lg p-3 mb-4 text-center ${
+                plan.highlighted ? 'bg-white text-[#7F77DD]' : 
+                plan.luxury ? 'bg-amber-400/10 text-amber-300' : 
+                'bg-[#F5F4FB] text-[#7F77DD]'
+              }`}>
+                <span className="text-xs font-semibold">
+                  3% comisión por venta recomendada por GLISS
+                </span>
+              </div>
 
               <div className="mb-6">
                 <p className={`text-xs uppercase tracking-wider font-semibold mb-2 ${
